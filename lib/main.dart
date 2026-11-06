@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart' show WebRTC;
 
 import 'app_assets.dart';
 import 'components/ui.dart';
@@ -14,8 +15,13 @@ import 'state/session.dart';
 import 'theme.dart';
 import 'util/toast.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Echo cancellation in software (WebRTC's own, as browsers use), not the phone's chip. By default flutter_webrtc
+  // hands the job to the phone's hardware canceller on Android 10+, and WebRTC then switches its own off; on phones
+  // whose chip cannot handle the loudspeaker (an Oppo in testing), everyone else hears their own voice come back.
+  // Must run before the first WebRTC call, so here.
+  await WebRTC.initialize(options: {'androidUseHardwareAudioProcessing': false});
   unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

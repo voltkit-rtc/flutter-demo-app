@@ -77,6 +77,7 @@ await client.promote(viewer, Role.cohost);
 | `onKicked` is read as well as `onClosed` | SDK 0.9.15 reports a kick as `roomClosed` on `onClosed`. See `_kicked` in `room_engine.dart` |
 | Seats are read again after a reconnect | SDK 0.9.15 refreshes the roster and tracks after a reconnect, but not the seats. See `_afterReconnect` in `room_engine.dart` |
 | `connect(metadata:)` and then `setMetadata` | The first gives Flutter clients the name at once. The second lets React Native clients in the same room say "X joined" |
+| WebRTC's software echo canceller is used, not the phone's | `flutter_webrtc` defaults to the phone's hardware canceller on Android 10+, and WebRTC's own is then off. On some phones (an Oppo in testing) that let the loudspeaker echo back to everyone else. See `main.dart` |
 | A foreground service runs while in a room | Android cuts an app's network and microphone within seconds of leaving the screen without one |
 | `permission_handler` is pinned to 12.0.1 | Version 13 needs compile SDK 37, newer than the Android Gradle Plugin that Flutter 3.47 ships with |
 | Impeller is off in debug builds | Its OpenGL path crashes an emulator with no real GPU. Release builds keep it. Delete the line in `android/app/src/debug/AndroidManifest.xml` to run it on a phone |
