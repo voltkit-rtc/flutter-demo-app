@@ -10,6 +10,7 @@ import '../api/client.dart';
 import '../api/socket.dart';
 import '../components/room/sheets.dart';
 import '../components/ui.dart';
+import '../config.dart';
 import '../icons.dart';
 import '../rtc/call_service.dart';
 import '../rtc/consent.dart';
@@ -106,7 +107,6 @@ class _CallViewState extends State<_CallView> {
   var _lines = <_CallLine>[];
   RemoteTrack? _video;
   RemoteTrack? _audio;
-  final _paused = <String>{};
   MediaStream? _stream;
   var _micOn = false;
   var _camOn = false;
@@ -143,25 +143,13 @@ class _CallViewState extends State<_CallView> {
       }),
       c.onTrackEnded.listen((e) {
         setState(() {
-          if (_video?.producerId == e.producerId) {
-            _video = null;
-            _paused.remove('video');
-          }
-          if (_audio?.producerId == e.producerId) {
-            _audio = null;
-            _paused.remove('audio');
-          }
+          if (_video?.producerId == e.producerId) _video = null;
+          if (_audio?.producerId == e.producerId) _audio = null;
         });
       }),
+      // RemoteTrack.paused is current by the time this fires.
       c.onTrackMuted.listen((e) {
-        if (e.identity != _peer.id) return;
-        setState(() {
-          if (e.paused) {
-            _paused.add(e.kind);
-          } else {
-            _paused.remove(e.kind);
-          }
-        });
+        if (e.identity == _peer.id) setState(() {});
       }),
       c.onLocalStreamChanged.listen((_) => _sync()),
       // A drop may be a network blip: their SDK reconnects. Give it time, as VoltKit's call guide does, so a peer whose
@@ -217,7 +205,7 @@ class _CallViewState extends State<_CallView> {
       await _client.connect();
       if (!mounted) return;
       if (_client.participants.any((p) => p.identity == _peer.id)) setState(() => _setPeerHere(true));
-      unawaited(CallService.start(title: 'VoltKit Live call', text: 'Tap to return to the call', leaveLabel: 'End call', onLeave: widget.onStop));
+      unawaited(CallService.start(title: '${Voltkit.appName} call', text: 'Tap to return to the call', leaveLabel: 'End call', onLeave: widget.onStop));
       await _client.publish(video: const VideoPublishOptions(quality: VideoQuality.p720));
       await _client.setSpeakerphoneOn(true);
       _sync();
@@ -318,8 +306,8 @@ class _CallViewState extends State<_CallView> {
     final media = MediaQuery.of(context);
     final insets = media.padding;
     final keyboard = media.viewInsets.bottom;
-    final video = _video != null && !_paused.contains('video') ? _video : null;
-    final remoteMicOff = _audio != null && _paused.contains('audio');
+    final video = _video?.paused == false ? _video : null;
+    final remoteMicOff = _audio?.paused ?? false;
     final camera = _camOn && (_stream?.getVideoTracks().isNotEmpty ?? false) ? _stream : null;
     return ColoredBox(
       color: Colors.black,

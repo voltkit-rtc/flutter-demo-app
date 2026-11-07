@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart' show WebRTC;
+import 'package:voltkit_rtc/voltkit_rtc.dart' show StreamClient;
 
 import 'app_assets.dart';
 import 'components/ui.dart';
@@ -17,11 +17,9 @@ import 'util/toast.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Echo cancellation in software (WebRTC's own, as browsers use), not the phone's chip. By default flutter_webrtc
-  // hands the job to the phone's hardware canceller on Android 10+, and WebRTC then switches its own off; on phones
-  // whose chip cannot handle the loudspeaker (an Oppo in testing), everyone else hears their own voice come back.
-  // Must run before the first WebRTC call, so here.
-  await WebRTC.initialize(options: {'androidUseHardwareAudioProcessing': false});
+  // WebRTC's own echo canceller, not the phone's, whatever the phone. It has to be first: WebRTC takes this setting
+  // only when it starts, and a renderer made before a client would start it with the phone's canceller.
+  await StreamClient.configureAndroidAudio().catchError((Object _) => false);
   unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -58,7 +56,7 @@ class _VoltKitLiveState extends State<VoltKitLive> {
   Widget build(BuildContext context) => SessionScope(
         session: _session,
         child: MaterialApp(
-          title: 'VoltKit Live',
+          title: Voltkit.appName,
           debugShowCheckedModeBanner: false,
           theme: appTheme(),
           navigatorKey: navigatorKey,

@@ -1,4 +1,4 @@
-# VoltKit RTC: Flutter example
+# VoltKit Flutter
 
 A complete live social app built on [VoltKit RTC](https://voltkit.in/rtc/flutter), written to be read. It has video rooms, audio rooms with
 seats, random 1v1 video calls, room chat, direct messages, moderation and SVGA gifts, all on
@@ -6,7 +6,7 @@ seats, random 1v1 video calls, room chat, direct messages, moderation and SVGA g
 
 Use it two ways: run it to see what VoltKit does, or open the file for the feature you need and copy the approach into your own app.
 
-It is the same app as the [React Native example](https://github.com/voltkit-rtc/react-native-example-audio-video), on the same
+It is the same app as [VoltKit Native](https://github.com/voltkit-rtc/react-native-example-audio-video), the React Native version, on the same
 [backend](https://github.com/voltkit-rtc/voltkit-rtc-backend-demo). The two can share a room.
 
 ## Run it
@@ -34,7 +34,7 @@ flutter run --dart-define=API_URL=https://api.example.com
 
 | Feature | Code | VoltKit APIs it shows |
 | --- | --- | --- |
-| Joining and leaving a room | [`lib/screens/room_screen.dart`](lib/screens/room_screen.dart) | `onClosed`, `onKicked` |
+| Joining and leaving a room | [`lib/screens/room_screen.dart`](lib/screens/room_screen.dart) | `onClosed`, `ClosedReason` |
 | Everything a room does | [`lib/rtc/room_engine.dart`](lib/rtc/room_engine.dart) | `StreamClient`, `connect`, `publish`, `onTrack`, `onTokenExpiring`, `updateToken` |
 | Video cards | [`lib/components/room/stage_video.dart`](lib/components/room/stage_video.dart) | `onActiveSpeakers`, `onStreamFallback` |
 | Drawing video | [`lib/rtc/video_views.dart`](lib/rtc/video_views.dart) | `RTCVideoRenderer`, `setVideoView`, `clearVideoView` |
@@ -74,10 +74,8 @@ await client.promote(viewer, Role.cohost);
 
 | Thing | Why |
 | --- | --- |
-| `onKicked` is read as well as `onClosed` | SDK 0.9.15 reports a kick as `roomClosed` on `onClosed`. See `_kicked` in `room_engine.dart` |
-| Seats are read again after a reconnect | SDK 0.9.15 refreshes the roster and tracks after a reconnect, but not the seats. See `_afterReconnect` in `room_engine.dart` |
-| `connect(metadata:)` and then `setMetadata` | The first gives Flutter clients the name at once. The second lets React Native clients in the same room say "X joined" |
-| WebRTC's software echo canceller is used, not the phone's | `flutter_webrtc` defaults to the phone's hardware canceller on Android 10+, and WebRTC's own is then off. On some phones (an Oppo in testing) that let the loudspeaker echo back to everyone else. See `main.dart` |
+| `StreamClient.configureAndroidAudio()` is the first line of `main()` | It selects WebRTC's own echo canceller, and WebRTC takes that setting only when it starts |
+| Two phones in one room echo on the loudspeaker | Each canceller removes only its own speaker's sound. Test in different rooms, or with earphones on one phone |
 | A foreground service runs while in a room | Android cuts an app's network and microphone within seconds of leaving the screen without one |
 | `permission_handler` is pinned to 12.0.1 | Version 13 needs compile SDK 37, newer than the Android Gradle Plugin that Flutter 3.47 ships with |
 | Impeller is off in debug builds | Its OpenGL path crashes an emulator with no real GPU. Release builds keep it. Delete the line in `android/app/src/debug/AndroidManifest.xml` to run it on a phone |

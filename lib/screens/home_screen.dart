@@ -311,7 +311,7 @@ class _HomeScreenState extends State<HomeScreen> with TabFocus {
           const SizedBox(width: 7),
           const Wordmark(size: 23),
           const SizedBox(width: 7),
-          const T('Live', variant: V.heading, color: C.textDim),
+          const T(Voltkit.appSuffix, variant: V.heading, color: C.textDim),
           const Spacer(),
           if (_online != null) ...[
             Container(

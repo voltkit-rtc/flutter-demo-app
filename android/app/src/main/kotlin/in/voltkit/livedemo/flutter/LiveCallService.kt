@@ -30,7 +30,7 @@ class LiveCallService : Service() {
             onLeave?.invoke()
             return START_NOT_STICKY
         }
-        val title = intent?.getStringExtra(EXTRA_TITLE) ?: "VoltKit Live"
+        val title = intent?.getStringExtra(EXTRA_TITLE) ?: "VoltKit Flutter"
         val text = intent?.getStringExtra(EXTRA_TEXT) ?: ""
         val leave = intent?.getStringExtra(EXTRA_LEAVE) ?: "Leave"
         try {

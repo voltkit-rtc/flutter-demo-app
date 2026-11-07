@@ -81,7 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.baseline,
                             textBaseline: TextBaseline.alphabetic,
-                            children: [Wordmark(size: 34), SizedBox(width: 6), T('Live', variant: V.title, color: C.textDim)],
+                            children: [Wordmark(size: 34), SizedBox(width: 6), T(Voltkit.appSuffix, variant: V.title, color: C.textDim)],
                           ),
                           const T(Voltkit.demoLine, variant: V.medium, align: TextAlign.center),
                           const T(Voltkit.tagline, color: C.textDim, align: TextAlign.center),

@@ -10,6 +10,9 @@ String assetUrl(String pathOrUrl) => RegExp(r'^https?://').hasMatch(pathOrUrl) ?
 class Voltkit {
   const Voltkit._();
 
+  /// The app's name. Its React Native twin is VoltKit Native.
+  static const appName = 'VoltKit Flutter';
+  static const appSuffix = 'Flutter';
   static const site = 'https://voltkit.in';
   static const docs = 'https://voltkit.in/docs';
   static const flutterPage = 'https://voltkit.in/rtc/flutter';

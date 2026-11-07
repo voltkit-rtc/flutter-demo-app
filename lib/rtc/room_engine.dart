@@ -80,7 +80,6 @@ class RoomEngine extends ChangeNotifier {
   late final AppLifecycleListener _life;
   final _subs = <StreamSubscription<dynamic>>[];
   var _disposed = false;
-  var _kicked = false;
 
   SessionState state = SessionState.idle;
   Claims claims = {};
@@ -106,7 +105,6 @@ class RoomEngine extends ChangeNotifier {
 
   final videoById = <String, RemoteTrack>{};
   final _audioById = <String, RemoteTrack>{};
-  final _paused = <String>{};
 
   /// Producer ids this viewer's connection cannot carry right now.
   final held = ValueNotifier<Set<String>>({});
@@ -136,10 +134,14 @@ class RoomEngine extends ChangeNotifier {
 
   bool micIsOn(String identity) {
     if (identity == me.id) return publishing && micEnabled;
-    return _audioById.containsKey(identity) && !_paused.contains('$identity:audio');
+    final track = _audioById[identity];
+    return track != null && !track.paused;
   }
 
-  bool videoIsOn(String identity) => videoById.containsKey(identity) && !_paused.contains('$identity:video');
+  bool videoIsOn(String identity) {
+    final track = videoById[identity];
+    return track != null && !track.paused;
+  }
 
   void _changed() {
     if (!_disposed) notifyListeners();
@@ -185,22 +187,14 @@ class RoomEngine extends ChangeNotifier {
     // Wired before connecting: tracks already being published arrive during connect().
     _subs.addAll([
       c.onConnectionStateChanged.listen(_onState),
-      // SDK 0.9.15 reports a kick as roomClosed on onClosed: the server's close overrides it. onKicked is reliable.
-      c.onKicked.listen((_) => _kicked = true),
       c.onClosed.listen((reason) {
         _stopBackground();
-        onClosed(_kicked ? ClosedReason.kicked : reason);
+        onClosed(reason);
       }),
       c.onTrack.listen(_onTrack),
       c.onTrackEnded.listen(_onTrackEnded),
+      // RemoteTrack.paused is current by the time this fires, so there is only redrawing to do.
       c.onTrackMuted.listen((e) {
-        if (e.source == 'music' || e.source.startsWith('screen')) return;
-        final key = '${e.identity}:${e.kind}';
-        if (e.paused) {
-          _paused.add(key);
-        } else {
-          _paused.remove(key);
-        }
         if (e.identity == me.id) _syncLocal();
         _changed();
       }),
@@ -246,9 +240,6 @@ class RoomEngine extends ChangeNotifier {
     }
     if (_disposed) return;
     _seed();
-    // connect() puts the profile on the roster for Flutter clients. The React Native demo, which can share this room,
-    // says "X joined" when it sees this update.
-    unawaited(client.setMetadata(_profile).catchError((Object _) {}));
     await _startBackground();
     unawaited(setSpeakerphone(true));
     _checkOnAir();
@@ -263,18 +254,13 @@ class RoomEngine extends ChangeNotifier {
 
   void _stopBackground() => unawaited(CallService.stop());
 
-  // Seats and room settings: read once from the join result, then followed through events.
+  // Seats and room settings: read from the join result, then followed through events. The join result is current
+  // again by the time a reconnect says connected, with whatever changed while the socket was away.
   void _seed() {
     final joined = client.joinResult;
     if (joined == null) return;
     claims = {for (final c in joined.claims) c.key: SeatClaim(c.identity, c.state)};
     locked = joined.blockedSlots.toSet();
-    _paused
-      ..clear()
-      ..addAll([
-        for (final p in joined.producers)
-          if (p.paused) '${p.identity}:${p.kind}',
-      ]);
     _applySettings(joined.metadata);
     state = client.connectionState;
     _rebuildMembers();
@@ -291,34 +277,10 @@ class RoomEngine extends ChangeNotifier {
 
   void _onState(SessionStateChange change) {
     state = change.state;
-    if (change.state == SessionState.connected && change.previous == SessionState.reconnecting) {
-      unawaited(_afterReconnect());
-    }
+    if (change.state == SessionState.connected && change.previous == SessionState.reconnecting) _seed();
     _rebuildMembers();
     _syncLocal();
     _checkOnAir();
-  }
-
-  // The SDK refreshes the roster and tracks after a reconnect, but not the seats: whatever changed while the socket
-  // was away has to be read again, or a seat stays drawn as taken or free when it is not.
-  Future<void> _afterReconnect() async {
-    try {
-      final raw = await client.getRoomState();
-      if (_disposed) return;
-      final list = raw['claims'];
-      if (list is List) {
-        claims = {
-          for (final c in list.whereType<Map>().map((m) => SlotClaim.fromMap(m.cast<String, dynamic>()))) c.key: SeatClaim(c.identity, c.state),
-        };
-      }
-      final blocked = raw['blockedSlots'];
-      if (blocked is List) locked = blocked.map((e) => e.toString()).toSet();
-      final meta = raw['metadata'];
-      if (meta is Map) _applySettings(meta.cast<String, dynamic>());
-      _rebuildMembers();
-    } catch (_) {
-      // The next event brings the seat it is about.
-    }
   }
 
   void _onTrack(RemoteTrack t) {
@@ -328,14 +290,8 @@ class RoomEngine extends ChangeNotifier {
   }
 
   void _onTrackEnded(({String identity, String producerId}) e) {
-    if (videoById[e.identity]?.producerId == e.producerId) {
-      videoById.remove(e.identity);
-      _paused.remove('${e.identity}:video');
-    }
-    if (_audioById[e.identity]?.producerId == e.producerId) {
-      _audioById.remove(e.identity);
-      _paused.remove('${e.identity}:audio');
-    }
+    if (videoById[e.identity]?.producerId == e.producerId) videoById.remove(e.identity);
+    if (_audioById[e.identity]?.producerId == e.producerId) _audioById.remove(e.identity);
     _changed();
   }
 

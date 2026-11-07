@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>VoltKit Live</string>
+	<string>VoltKit Flutter</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Your camera is shown live to the people in your room or call.</string>
 	<key>NSMicrophoneUsageDescription</key>
