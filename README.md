@@ -78,6 +78,7 @@ await client.promote(viewer, Role.cohost);
 | Two phones in one room echo on the loudspeaker | Each canceller removes only its own speaker's sound. Test in different rooms, or with earphones on one phone |
 | A foreground service runs while in a room | Android cuts an app's network and microphone within seconds of leaving the screen without one |
 | `permission_handler` is pinned to 12.0.1 | Version 13 needs compile SDK 37, newer than the Android Gradle Plugin that Flutter 3.47 ships with |
+| flutter_webrtc comes from `third_party/flutter_webrtc` | A copy of 1.6.3 whose Android renderer has an alpha channel. Without it, Impeller can show the background through the video on some phones. See [PATCHED.md](third_party/flutter_webrtc/PATCHED.md) |
 | Impeller is off in debug builds | Its OpenGL path crashes an emulator with no real GPU. Release builds keep it. Delete the line in `android/app/src/debug/AndroidManifest.xml` to run it on a phone |
 
 ## Tests
@@ -101,4 +102,5 @@ flutter build apk --release
 
 ## Credits
 
-MIT, see [LICENSE](LICENSE). The VoltKit name and logo are not part of that licence. Outfit is under the SIL Open Font License, and Ionicons under MIT.
+MIT, see [LICENSE](LICENSE). The VoltKit name and logo are not part of that licence. Outfit is under the SIL Open Font License, Ionicons under
+MIT, and the copy of flutter_webrtc under its own MIT licence.

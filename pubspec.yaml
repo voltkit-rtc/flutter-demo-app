@@ -19,6 +19,12 @@ dependencies:
   url_launcher: ^6.3.3
   wakelock_plus: ^1.8.2
 
+# flutter_webrtc 1.6.3 with one fix: its Android video renderer gets an alpha channel. Without it, Impeller (on in
+# release builds) shows the room background through the video on some phones. See third_party/flutter_webrtc/PATCHED.md.
+dependency_overrides:
+  flutter_webrtc:
+    path: third_party/flutter_webrtc
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

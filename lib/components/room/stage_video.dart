@@ -32,10 +32,33 @@ class _SpeakingEdge extends StatelessWidget {
                   color: on ? C.cyan : (host ? const Color(0xBFFFD765) : const Color(0x38FFFFFF)),
                   width: on ? 2.5 : 1,
                 ),
-                boxShadow: on ? const [BoxShadow(color: C.cyan, blurRadius: 14)] : null,
               ),
             );
           },
+        ),
+      );
+}
+
+/// The glow around someone who is talking. It goes behind the card: a shadow painted over the card fills all of it, and
+/// covered the video of whoever was speaking.
+class _SpeakingGlow extends StatelessWidget {
+  const _SpeakingGlow({required this.engine, required this.identity});
+
+  final RoomEngine engine;
+  final String identity;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+        child: ValueListenableBuilder<Set<String>>(
+          valueListenable: engine.speaking,
+          builder: (context, speaking, _) => !speaking.contains(identity)
+              ? const SizedBox.shrink()
+              : DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(R.sm),
+                    boxShadow: const [BoxShadow(color: C.cyan, blurRadius: 14)],
+                  ),
+                ),
         ),
       );
 }
@@ -113,84 +136,91 @@ class _VideoCard extends StatelessWidget {
         id: id,
         label: filled ? '$name, ${role?.name ?? 'viewer'}' : (locked ? '$seatLabel, locked' : '$seatLabel, empty'),
         onTap: onTap,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(R.sm),
-          child: filled
-              ? Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: vertical(host ? const [Color(0xFF3B2A08), Color(0xFF170B2E)] : const [Color(0xFF241243), Color(0xFF0D0720)]),
-                      ),
-                    ),
-                    Center(child: Avatar(avatar: avatar, size: rect.shortestSide * (compact ? 0.42 : 0.34))),
-                    if (remote != null) RemoteVideo(key: ValueKey(remote!.producerId), client: engine.client, track: remote!),
-                    if (localStream != null) LocalVideo(stream: localStream!, mirror: mirror),
-                    if (held != null && !compact)
-                      ValueListenableBuilder<Set<String>>(
-                        valueListenable: engine.held,
-                        builder: (context, list, _) => !list.contains(held)
-                            ? const SizedBox.shrink()
-                            : Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(color: const Color(0x99000000), borderRadius: BorderRadius.circular(8)),
-                                  child: const T('Weak connection', variant: V.tiny),
-                                ),
-                              ),
-                      ),
-                    if (away) const ColoredBox(color: Color(0x8C000000)),
-                    _SpeakingEdge(engine: engine, identity: identity!, host: host),
-                    if ((frame == 'lion' || frame == 'wolf') && showVideo)
-                      Positioned(
-                        top: compact ? 2 : 4,
-                        right: compact ? 2 : 4,
-                        child: Asset(crestAsset(frame), width: compact ? 28 : 42, height: compact ? 28 : 42, fit: BoxFit.contain),
-                      ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: 44,
-                      child: IgnorePointer(child: DecoratedBox(decoration: BoxDecoration(gradient: vertical(G.scrimBottom)))),
-                    ),
-                    Positioned(
-                      left: 6,
-                      right: 6,
-                      bottom: 6,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 18,
-                            height: 18,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(shape: BoxShape.circle, color: micOn ? const Color(0x38FFFFFF) : C.danger),
-                            child: Icon(micOn ? Ion.mic : Ion.micOff, size: 10, color: C.white),
-                          ),
-                          const SizedBox(width: 5),
-                          Expanded(child: T(away ? 'Reconnecting…' : name ?? '', variant: V.tiny, lines: 1)),
-                        ],
-                      ),
-                    ),
-                    if (role != null) Positioned(top: 6, left: 6, child: RoleBadge(role: role!.name)),
-                  ],
-                )
-              : Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    const ColoredBox(color: Color(0x0DFFFFFF)),
-                    const CustomPaint(painter: _DashedBorder()),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            if (filled) _SpeakingGlow(engine: engine, identity: identity!),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(R.sm),
+              child: filled
+                  ? Stack(
+                      fit: StackFit.expand,
                       children: [
-                        Icon(locked ? Ion.lockClosed : Ion.add, size: compact ? 22 : 28, color: C.textDim),
-                        const SizedBox(height: 4),
-                        T(seatLabel ?? '', variant: V.tiny, color: C.textFaint),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: vertical(host ? const [Color(0xFF3B2A08), Color(0xFF170B2E)] : const [Color(0xFF241243), Color(0xFF0D0720)]),
+                          ),
+                        ),
+                        Center(child: Avatar(avatar: avatar, size: rect.shortestSide * (compact ? 0.42 : 0.34))),
+                        if (remote != null) RemoteVideo(key: ValueKey(remote!.producerId), client: engine.client, track: remote!),
+                        if (localStream != null) LocalVideo(stream: localStream!, mirror: mirror),
+                        if (held != null && !compact)
+                          ValueListenableBuilder<Set<String>>(
+                            valueListenable: engine.held,
+                            builder: (context, list, _) => !list.contains(held)
+                                ? const SizedBox.shrink()
+                                : Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(color: const Color(0x99000000), borderRadius: BorderRadius.circular(8)),
+                                      child: const T('Weak connection', variant: V.tiny),
+                                    ),
+                                  ),
+                          ),
+                        if (away) const ColoredBox(color: Color(0x8C000000)),
+                        _SpeakingEdge(engine: engine, identity: identity!, host: host),
+                        if ((frame == 'lion' || frame == 'wolf') && showVideo)
+                          Positioned(
+                            top: compact ? 2 : 4,
+                            right: compact ? 2 : 4,
+                            child: Asset(crestAsset(frame), width: compact ? 28 : 42, height: compact ? 28 : 42, fit: BoxFit.contain),
+                          ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: 44,
+                          child: IgnorePointer(child: DecoratedBox(decoration: BoxDecoration(gradient: vertical(G.scrimBottom)))),
+                        ),
+                        Positioned(
+                          left: 6,
+                          right: 6,
+                          bottom: 6,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 18,
+                                height: 18,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(shape: BoxShape.circle, color: micOn ? const Color(0x38FFFFFF) : C.danger),
+                                child: Icon(micOn ? Ion.mic : Ion.micOff, size: 10, color: C.white),
+                              ),
+                              const SizedBox(width: 5),
+                              Expanded(child: T(away ? 'Reconnecting…' : name ?? '', variant: V.tiny, lines: 1)),
+                            ],
+                          ),
+                        ),
+                        if (role != null) Positioned(top: 6, left: 6, child: RoleBadge(role: role!.name)),
+                      ],
+                    )
+                  : Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        const ColoredBox(color: Color(0x0DFFFFFF)),
+                        const CustomPaint(painter: _DashedBorder()),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(locked ? Ion.lockClosed : Ion.add, size: compact ? 22 : 28, color: C.textDim),
+                            const SizedBox(height: 4),
+                            T(seatLabel ?? '', variant: V.tiny, color: C.textFaint),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
+            ),
+          ],
         ),
       ),
     );
