@@ -68,6 +68,7 @@ class Ion {
   static const volumeHighOutline = IconData(0xf614, fontFamily: 'Ionicons');
   static const earOutline = IconData(0xf2c0, fontFamily: 'Ionicons');
   static const cellularOutline = IconData(0xf209, fontFamily: 'Ionicons');
+  static const pulseOutline = IconData(0xf4f7, fontFamily: 'Ionicons');
   static const flashOutline = IconData(0xf31a, fontFamily: 'Ionicons');
   static const powerOutline = IconData(0xf4e8, fontFamily: 'Ionicons');
   static const pencil = IconData(0xf49c, fontFamily: 'Ionicons');

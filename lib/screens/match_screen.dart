@@ -15,6 +15,7 @@ import '../icons.dart';
 import '../rtc/call_service.dart';
 import '../rtc/consent.dart';
 import '../rtc/errors.dart';
+import '../rtc/sound_report.dart';
 import '../rtc/video_views.dart';
 import '../state/session.dart';
 import '../theme.dart';
@@ -258,6 +259,16 @@ class _CallViewState extends State<_CallView> {
             onTap: () {
               Navigator.pop(sheet);
               unawaited(showReportSheet(context, id: _peer.id, name: _peer.name));
+            },
+          ),
+          SheetRow(
+            id: 'call-sound-report',
+            icon: Ion.pulseOutline,
+            label: 'Copy a sound report',
+            hint: 'Echo or other sound trouble? Send this to VoltKit',
+            onTap: () {
+              Navigator.pop(sheet);
+              unawaited(copySoundReport(_client, loudspeaker: true));
             },
           ),
           SheetRow(

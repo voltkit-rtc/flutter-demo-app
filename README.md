@@ -6,8 +6,27 @@ seats, random 1v1 video calls, room chat, direct messages, moderation and SVGA g
 
 Use it two ways: run it to see what VoltKit does, or open the file for the feature you need and copy the approach into your own app.
 
-It is the same app as [VoltKit Native](https://github.com/voltkit-rtc/react-native-example-audio-video), the React Native version, on the same
-[backend](https://github.com/voltkit-rtc/voltkit-rtc-backend-demo). The two can share a room.
+## Start here
+
+| I want to... | Read |
+| --- | --- |
+| Run this app | [Run it](#run-it), below |
+| Add VoltKit to my own Flutter app, step by step | [Integrate VoltKit into your app](docs/integrate-into-your-app.md) |
+| Build seats, roles, moderation, chat, gifts, 1v1 calls and DMs | [Build the features](docs/build-the-features.md) |
+| Find the code for one feature | [Where each feature lives](#where-each-feature-lives), below |
+| Build the backend that hands out tokens | [voltkit-rtc-backend-demo](https://github.com/voltkit-rtc/voltkit-rtc-backend-demo) and its [server SDK guide](https://github.com/voltkit-rtc/voltkit-rtc-backend-demo/blob/main/docs/voltkit-server-sdk.md) |
+| Read VoltKit's own Flutter guide | [voltkit.in/docs/flutter-sdk](https://voltkit.in/docs/flutter-sdk) |
+
+## The same app on every platform
+
+All three run on one backend and can share a room.
+
+| | Repo |
+| --- | --- |
+| Backend (Node.js) | [voltkit-rtc-backend-demo](https://github.com/voltkit-rtc/voltkit-rtc-backend-demo) |
+| React Native | [react-native-example-audio-video](https://github.com/voltkit-rtc/react-native-example-audio-video) |
+| Flutter (this one) | [flutter-demo-app](https://github.com/voltkit-rtc/flutter-demo-app) |
+| Kotlin, Android | [android-kotlin-demo-app](https://github.com/voltkit-rtc/android-kotlin-demo-app) |
 
 ## Run it
 
@@ -74,7 +93,8 @@ await client.promote(viewer, Role.cohost);
 
 | Thing | Why |
 | --- | --- |
-| `StreamClient.configureAndroidAudio()` is the first line of `main()` | It selects WebRTC's own echo canceller, and WebRTC takes that setting only when it starts |
+| `StreamClient.configureAndroidAudio()` is the first line of `main()` | It selects WebRTC's own echo canceller, tuned for the loudspeaker on phones whose own canceller is Android's software one (0.9.17), and WebRTC takes that setting only when it starts. Never call flutter_webrtc's `WebRTC.initialize` after it: that wipes the tuning |
+| Room menu → Copy a sound report | Copies what VoltKit asks for with an echo report: the phone, Android version, where the sound plays, the call volume, and the SDK's `echoSuppression` and `phoneEchoCanceller` from `getDiagnostics()`. Also in a 1v1 call's Safety menu |
 | Two phones in one room echo on the loudspeaker | Each canceller removes only its own speaker's sound. Test in different rooms, or with earphones on one phone |
 | A foreground service runs while in a room | Android cuts an app's network and microphone within seconds of leaving the screen without one |
 | `permission_handler` is pinned to 12.0.1 | Version 13 needs compile SDK 37, newer than the Android Gradle Plugin that Flutter 3.47 ships with |

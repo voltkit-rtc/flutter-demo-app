@@ -968,10 +968,10 @@ packages:
     dependency: "direct main"
     description:
       name: voltkit_rtc
-      sha256: "32664b03659a035f2c6fe5faf048ebc1a51bf0e5fa76d75de9b413adf87e75ad"
+      sha256: "157d2dd4dfc47321dfb2d602ed51d6ea38ff0d1fd779878e3045b85107f3fc32"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.16"
+    version: "0.9.17"
   wakelock_plus:
     dependency: "direct main"
     description:

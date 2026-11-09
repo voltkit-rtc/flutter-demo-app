@@ -9,6 +9,7 @@ import '../../icons.dart';
 import '../../rtc/permissions.dart';
 import '../../rtc/room_engine.dart';
 import '../../rtc/seats.dart';
+import '../../rtc/sound_report.dart';
 import '../../state/session.dart';
 import '../../theme.dart';
 import '../../util/toast.dart';
@@ -475,6 +476,13 @@ Future<void> showMoreSheet(
                   hint: network.rttMs != null ? '${network.rttMs} ms round trip' : null,
                   onTap: () => Navigator.pop(context),
                 ),
+              SheetRow(
+                id: 'more-sound-report',
+                icon: Ion.pulseOutline,
+                label: 'Copy a sound report',
+                hint: 'Echo or other sound trouble? Send this to VoltKit',
+                onTap: () => close(() => unawaited(copySoundReport(engine.client, loudspeaker: engine.speakerphone))),
+              ),
               if (!isHost) SheetRow(id: 'more-report', icon: Ion.flagOutline, label: 'Report this room', onTap: () => close(onReportRoom)),
               SheetRow(
                 icon: Ion.flashOutline,
